@@ -17,7 +17,7 @@ with st.sidebar:
     txt = st.text_area('Input Chat', '''   ''')
     if st.button('Send'):
         prompt = txt
-        url = 'https://f.openaimouj.uk/v1/completions'
+        url = 'https:///v1/completions'
         # The headers for the API request
         headers = {
         "Content-Type": "application/json",
