@@ -1,6 +1,13 @@
 import streamlit as st
 
 import requests
+import os
+
+TOKEN = "token"
+st.write(
+    "Has environment variables been set:",
+    os.environ["TOKEN"] == st.secrets["TOKEN"],
+)
 
 # 答案保存函数，把ChatGPT的回答文本，保存到日志文件中
 def saveAnswer(chatText):
@@ -10,7 +17,7 @@ def saveAnswer(chatText):
         f.write("\n")
 
 # Your OpenAI API Key
-api_key = "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"
+api_key = st.secrets.TOKEN
 # The text prompt you want to generate a response
 responsetxt = ""
 with st.sidebar:
