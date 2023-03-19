@@ -44,7 +44,7 @@ with st.sidebar:
             responsetxt = response.status_code
 
 st.write(txt)
-saveAnswer(txt)
+#saveAnswer(txt)
 st.write(responsetxt)
-saveAnswer(responsetxt)
+#saveAnswer(responsetxt)
 #st.markdown(responsetxt)
