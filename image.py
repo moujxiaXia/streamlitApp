@@ -1,11 +1,7 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Mar 26 19:58:44 2023
-
-@author: Administrator
-"""
-import openai
 import streamlit as st
+import openai
+import os
+
 
 openai.api_key = st.secrets["TOKEN"] 
 #用来生成图像的文本提示
