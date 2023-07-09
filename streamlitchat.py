@@ -20,19 +20,16 @@ def chat_with_gpt(prompt):
     return response.choices[0].text.strip()
 
 # Streamlit应用程序
-def main():
-    st.title('ChatGPT Demo')
 
-    # 获取用户输入的对话提示
-    prompt = st.text_input('User Input', value='', max_chars=100)
+st.title('ChatGPT Demo')
 
-    if st.button('Send'):
-        # 与GPT对话并获取响应
-        response = chat_with_gpt(prompt)
+# 获取用户输入的对话提示
+prompt = st.text_input('User Input', value='', max_chars=100)
 
-        # 显示GPT的响应
-        st.text_area('ChatGPT', value=response, height=200)
+if st.button('Send'):
+    # 与GPT对话并获取响应
+    response = chat_with_gpt(prompt)
 
-# 运行Streamlit应用程序
-if __name__ == '__main__':
-    main()
+    # 显示GPT的响应
+    st.text_area('ChatGPT', value=response, height=200)
+
