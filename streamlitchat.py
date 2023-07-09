@@ -5,6 +5,7 @@ import openai
 #openai.api_key = 'YOUR_API_KEY'
 # Your OpenAI API Key
 openai.api_key = st.secrets["TOKEN"]
+print(openai.Model.list())
 # 定义对话函数
 def chat_with_gpt(prompt):
     response = openai.Completion.create(
