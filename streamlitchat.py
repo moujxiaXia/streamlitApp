@@ -1,51 +1,38 @@
 import streamlit as st
+import openai
 
-import requests
-
-# 答案保存函数，把ChatGPT的回答文本，保存到日志文件中
-def saveAnswer(chatText):
-    filename = f'ChatGPT_Answer.log'
-    with open(filename, 'a+') as f:
-        f.write(chatText)
-        f.write("\n")
-
+# 设置OpenAI API密钥
+#openai.api_key = 'YOUR_API_KEY'
 # Your OpenAI API Key
-api_key = st.secrets["TOKEN"]
-# The text prompt you want to generate a response
-responsetxt = ""
-with st.sidebar:
-    txt = st.text_area('Input Chat', '''   ''')
+openai.api_key = st.secrets["TOKEN"]
+# 定义对话函数
+def chat_with_gpt(prompt):
+    response = openai.Completion.create(
+        engine='text-davinci-003',  # 这里使用GPT-3.5的引擎，ChatGPT 4.0使用的引擎可能不同
+        prompt=prompt,
+        max_tokens=50,  # 设置生成的响应长度
+        n = 1, # 设置返回的响应数量
+        stop=None,  # 可以设置停止标记来结束响应
+        temperature=0.7,  # 调整生成响应的创造性程度
+        frequency_penalty=0.0,
+        presence_penalty=0.0
+    )
+    return response.choices[0].text.strip()
+
+# Streamlit应用程序
+def main():
+    st.title('ChatGPT Demo')
+
+    # 获取用户输入的对话提示
+    prompt = st.text_input('User Input', value='', max_chars=100)
+
     if st.button('Send'):
-        prompt = txt
-        url = 'https://api.openai.com/v1/completions'
-        #url = 'https://f.openaimouj.uk/v1/completions'
-        # The headers for the API request
-        headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {api_key}"
-        }
-        params ={
-        "model": "text-davinci-003",
-        "prompt": prompt,
-        "temperature": 0.7,
-        "max_tokens": 2048,
-        "top_p": 1,
-        "frequency_penalty": 0,
-        "presence_penalty": 0
-        }
+        # 与GPT对话并获取响应
+        response = chat_with_gpt(prompt)
 
-        # Make the API request
-        response = requests.post(url, headers=headers, json=params)
-        # Check if the request was successful
+        # 显示GPT的响应
+        st.text_area('ChatGPT', value=response, height=200)
 
-        if response.status_code == 200:
-            # Extract the generated text from the response
-            responsetxt = response.json()["choices"][0]["text"]
-        else:
-            responsetxt = response.status_code
-
-st.write(txt)
-#saveAnswer(txt)
-st.write(responsetxt)
-#saveAnswer(responsetxt)
-#st.markdown(responsetxt)
+# 运行Streamlit应用程序
+if __name__ == '__main__':
+    main()
