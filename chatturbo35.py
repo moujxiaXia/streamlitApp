@@ -44,7 +44,7 @@ class ChatGPT:
         self.chat_list.append({"role":"user","content":prompt}) 
         allmsg = self.show_conversation()
         d = {
-            "model": "gpt-3.5-turbo",
+            "model": "gpt-4",#"gpt-3.5-turbo",
             "messages": [{"role": "user", "content":allmsg}],
             "temperature": 0.7
          }
