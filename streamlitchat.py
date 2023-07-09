@@ -5,13 +5,13 @@ import openai
 #openai.api_key = 'YOUR_API_KEY'
 # Your OpenAI API Key
 openai.api_key = st.secrets["TOKEN"]
-print(openai.Model.list())
+# print(openai.Model.list())
 # 定义对话函数
 def chat_with_gpt(prompt):
     response = openai.Completion.create(
         engine='text-davinci-003',  # 这里使用GPT-3.5的引擎，ChatGPT 4.0使用的引擎可能不同
         prompt=prompt,
-        max_tokens=50,  # 设置生成的响应长度
+        max_tokens=2048,  # 设置生成的响应长度
         n = 1, # 设置返回的响应数量
         stop=None,  # 可以设置停止标记来结束响应
         temperature=0.7,  # 调整生成响应的创造性程度
@@ -25,7 +25,7 @@ def chat_with_gpt(prompt):
 st.title('ChatGPT Demo')
 
 # 获取用户输入的对话提示
-prompt = st.text_input('User Input', value='', max_chars=100)
+prompt = st.text_input('User Input', value='', max_chars=500)
 
 if st.button('Send'):
     # 与GPT对话并获取响应
