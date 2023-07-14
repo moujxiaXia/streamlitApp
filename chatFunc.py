@@ -1,7 +1,7 @@
 import openai
 import json
 import streamlit as st
-import funcList
+#import funcList
 
 # 设置OpenAI API密钥
 openai.api_key = st.secrets["TOKEN"] 
