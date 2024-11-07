@@ -7,23 +7,9 @@ Created on 2024-11-07
 import streamlit as st
 import time
 import openai
-import json
 
 # 设置你的OpenAI API密钥
 openai.api_key = st.secrets["TOKEN"] 
-
-
-# 定义要发送给ChatGPT的请求参数
-def chat_with_gpt4(prompt):
-    response = openai.ChatCompletion.create(
-        model="gpt-4",  # 假设GPT-4模型可用
-        messages=[
-            {"role": "user", "content": prompt}
-        ],
-        max_tokens=1024,  # 设置响应的最大长度，根据需要调整
-        temperature=0.7,  # 设置响应的随机性，可以根据需要调整
-    )
-    return response['choices']['message']['content']
 
 # Password protection
 def check_password():
@@ -55,49 +41,48 @@ def check_password():
 if not check_password():
     st.stop()  # Do not continue if check_password is False
 
-# Main app
-st.title("Chat-O4 对话系统")
+# 页面标题
+st.title("Chat-O4 模型对话助手")
 
-# Initialize chat history
+# 在侧边栏设置选项
+st.sidebar.title("设置选项")
+model = st.sidebar.selectbox("选择模型", ["gpt-3.5-turbo", "gpt-4"])
+temperature = st.sidebar.slider("选择Temperature", 0.0, 1.0, 0.7)
+
+# 用于记录对话的 session state
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Input type selection
-input_type = st.select_slider(
-    "选择输入类型",
-    options=["文本", "图片", "音频", "视频"]
-)
-
-# Display chat messages from history on rerun
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
-
-# New chat button
-if st.button("开始新会话"):
+# 开始新的会话按钮
+if st.sidebar.button("开始新会话"):
     st.session_state.messages = []
-    st.experimental_rerun()
+    st.success("已创建新会话")
 
-# Accept user input
-if prompt := st.chat_input("请输入您的问题"):
-    # Display user message in chat message container
-    with st.chat_message("user"):
-        st.markdown(prompt)
-    # Add user message to chat history
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    
-    # Display assistant response in chat message container
-    with st.chat_message("assistant"):
-        message_placeholder = st.empty()
-        full_response = ""
-        # Simulate stream of response with milliseconds delay
-        #assistant_response = f"这是对您问题 '{prompt}' 的回答。"  # 这里替换为实际的API调用
-        assistant_response = chat_with_gpt4(st.session_state.messages)
-        for chunk in assistant_response.split():
-            full_response += chunk + " "
-            time.sleep(0.05)
-            message_placeholder.markdown(full_response + "▌")
-        message_placeholder.markdown(full_response)
-    # Add assistant response to chat history
-    st.session_state.messages.append({"role": "assistant", "content": full_response})
+# 用户输入
+user_input = st.text_input("请输入您的问题：")
+
+# 显示对话输出
+if user_input:
+    # 将用户输入加入到对话历史中
+    st.session_state.messages.append({"role": "user", "content": user_input})
+
+    # 调用 OpenAI API 获取回复
+    response = openai.ChatCompletion.create(
+        model=model,
+        messages=st.session_state.messages,
+        temperature=temperature,
+    )
+
+    # 获取回复内容并显示
+    assistant_reply = response.choices[0].message["content"]
+    st.session_state.messages.append({"role": "assistant", "content": assistant_reply})
+    st.write("**Assistant**:", assistant_reply)
+
+# 显示完整对话记录
+st.subheader("对话记录")
+for msg in st.session_state.messages:
+    if msg["role"] == "user":
+        st.write("**You**:", msg["content"])
+    else:
+        st.write("**Assistant**:", msg["content"])
 
