@@ -1,80 +1,103 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri Mar 24 23:04:53 2023
+Created on 2024-11-07
 
 @author: Administrator
 """
-
 import streamlit as st
-import requests
+import time
+import openai
+import json
 
-# Your OpenAI API Key
-api_key = st.secrets["TOKEN"] 
-
-u = 'https://api.openai.com/v1/chat/completions'
-# The headers for the API request
-h = {
-    "Content-Type": "application/json",
-    "Authorization": f"Bearer {api_key}"
-}
+# 设置你的OpenAI API密钥
+openai.api_key = st.secrets["TOKEN"] 
 
 
-class ChatGPT:  
-    def __init__(self,chat_list=[]) -> None:  
-        # 初始化对话列表  
-        self.chat_list = []  
-  
+# 定义要发送给ChatGPT的请求参数
+def chat_with_gpt4(prompt):
+    response = openai.ChatCompletion.create(
+        model="gpt-4",  # 假设GPT-4模型可用
+        messages=[
+            {"role": "user", "content": prompt}
+        ],
+        max_tokens=1024,  # 设置响应的最大长度，根据需要调整
+        temperature=0.7,  # 设置响应的随机性，可以根据需要调整
+    )
+    return response['choices']['message']['content']
+
+# Password protection
+def check_password():
+    """Returns `True` if the user had the correct password."""
+    def password_entered():
+        if st.session_state["password"] == st.secrets["password"]:
+            st.session_state["password_correct"] = True
+            del st.session_state["password"]  # Don't store password
+        else:
+            st.session_state["password_correct"] = False
+
+    if "password_correct" not in st.session_state:
+        # First run, show input for password
+        st.text_input(
+            "请输入密码", type="password", on_change=password_entered, key="password"
+        )
+        return False
+    elif not st.session_state["password_correct"]:
+        # Password incorrect, show input + error
+        st.text_input(
+            "请输入密码", type="password", on_change=password_entered, key="password"
+        )
+        st.error("😕 密码错误")
+        return False
+    else:
+        # Password correct
+        return True
+
+if not check_password():
+    st.stop()  # Do not continue if check_password is False
+
+# Main app
+st.title("Chat-O4 对话系统")
+
+# Initialize chat history
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+# Input type selection
+input_type = st.select_slider(
+    "选择输入类型",
+    options=["文本", "图片", "音频", "视频"]
+)
+
+# Display chat messages from history on rerun
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
+
+# New chat button
+if st.button("开始新会话"):
+    st.session_state.messages = []
+    st.experimental_rerun()
+
+# Accept user input
+if prompt := st.chat_input("请输入您的问题"):
+    # Display user message in chat message container
+    with st.chat_message("user"):
+        st.markdown(prompt)
+    # Add user message to chat history
+    st.session_state.messages.append({"role": "user", "content": prompt})
     
-      
-    # 显示接口返回  
-    def show_conversation(self):  
-        msg_list = self.chat_list
-        msgAll = ""
-        for msg in msg_list:  
-            if msg['role'] == 'user':  
-                msgAll += f"user: {msg['content']}\n"
-                #print(f"Me: {msg['content']}\n")  
-            else:  
-                msgAll += f"assistant: {msg['content']}\n"
-                #print(f"ChatGPT: {msg['content']}\n")  
-        return msgAll
-  
-    # 提示chatgpt  
-    def ask(self,prompt):  
-        self.chat_list.append({"role":"user","content":prompt}) 
-        allmsg = self.show_conversation()
-        d = {
-            "model": "gpt-3.5-turbo-0613",
-            "messages": [{"role": "user", "content":allmsg}],
-            "temperature": 0.7
-         }
-
-        response = requests.post(u, headers=h, json=d)
-        #response = openai.ChatCompletion.create(model="gpt-3.5-turbo",messages=self.chat_list)  
-        answer = response.json()["choices"][0]["message"]["content"]
-        # 添加历史对话，形成上下文关系  
-        self.chat_list.append({"role":"assistant","content":answer})  
-        #self.show_conversation(self.chat_list)  
-
-col1, col2 = st.columns(2)  #([1, 3])
-# Initialization
-if 'chat' not in st.session_state:
-    st.session_state.chat = ChatGPT()
-    st.session_state.input_text = ""
-
-# the callback function for the button will add 1 to the
-# slider value up to 10
-def asktochat():
-    st.session_state.chat.ask(st.session_state.input_text)
-
-
-with col1:
-    with st.form(key='my_form'):
-        st.text_input("输入文本栏", "", key='input_text')
-        submit = st.form_submit_button(label='Send', on_click=asktochat)
-
-with col2:
-    st.button("Clear")
-    outtext = st.session_state.chat.show_conversation()
-    st.text_area("history", outtext, height=600)
+    # Display assistant response in chat message container
+    with st.chat_message("assistant"):
+        message_placeholder = st.empty()
+        full_response = ""
+        # Simulate stream of response with milliseconds delay
+        #assistant_response = f"这是对您问题 '{prompt}' 的回答。"  # 这里替换为实际的API调用
+        assistant_response = chat_with_gpt4(st.session_state.messages)
+        for chunk in assistant_response.split():
+            full_response += chunk + " "
+            time.sleep(0.05)
+            message_placeholder.markdown(full_response + "▌")
+        message_placeholder.markdown(full_response)
+    # Add assistant response to chat history
+    st.session_state.messages.append({"role": "assistant", "content": full_response})
 
